@@ -21,9 +21,13 @@ exports.getAllPatients = async (req, res) => {
 
 	const paginatedPatients = filteredPatients.slice(startIndex, endIndex)
 
+	const totalItems = filteredPatients.length
+	const totalPages = Math.ceil(totalItems / limitNum)
+
 	res.json({
 		data: paginatedPatients,
-		total: filteredPatients.length,
+		total: totalItems,
+		totalPages,
 		page: pageNum,
 		limit: limitNum
 	})
