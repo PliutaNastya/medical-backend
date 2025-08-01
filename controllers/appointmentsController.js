@@ -5,28 +5,50 @@ const filePath = './data/appointments.json'
 const patientsPath = './data/patients.json'
 
 exports.getAllAppointments = async (req, res) => {
-  const appointments = await readData(filePath)
-  const patients = await readData(patientsPath)
-  const { date, patientName } = req.query
+	const appointments = await readData(filePath)
+	const patients = await readData(patientsPath)
+	const {
+		date,
+		patientName,
+		page = 1,
+		limit = 5
+	} = req.query
 
-  let result = appointments
+	let result = appointments
 
-  if (date) {
-    result = result.filter((app) => app.date.startsWith(date))
-  }
+	// Фільтрація по даті
+	if (date) {
+		result = result.filter((app) => app.date.startsWith(date))
+	}
 
-  if (patientName) {
-    result = result.filter((app) => {
-      const patient = patients.find((p) => p.id === app.patientId)
-      return (
-        patient &&
-        patient.fullName.toLowerCase().includes(patientName.toLowerCase())
-      )
-    })
-  }
+	// Фільтрація по імені пацієнта
+	if (patientName) {
+		result = result.filter((app) => {
+			const patient = patients.find((p) => p.id === app.patientId)
+			return (
+				patient &&
+				patient.fullName.toLowerCase().includes(patientName.toLowerCase())
+			)
+		})
+	}
 
-  res.json(result)
+	// Пагінація
+	const pageNum = Math.max(parseInt(page) || 1, 1)
+	const limitNum = Math.max(parseInt(limit) || 5, 1)
+	const startIndex = (pageNum - 1) * limitNum
+	const endIndex = startIndex + limitNum
+
+	const paginated = result.slice(startIndex, endIndex)
+
+	res.json({
+		data: paginated,
+		total: result.length,
+		page: pageNum,
+		limit: limitNum,
+		totalPages: Math.ceil(result.length / limitNum)
+	})
 }
+
 
 exports.getAppointmentById = async (req, res) => {
   const appointments = await readData(filePath)
